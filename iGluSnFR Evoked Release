@@ -84,9 +84,6 @@ end
         num_peaks_syn_bef=0; %previously a 
         num_peaks_syn_aft=0;
         
-        %amplitude of potassium response
-        K_size(column_ROI) = max(sROI(i_K:end,column_ROI))-mean(sROI(i_K-100:i_K-1,column_ROI));
-        
 %%--------------To detect evoked peaks before photobleaching------------%%
         
         for row_time = i_AP1-50:i_Tx %row by row = time, previously k
