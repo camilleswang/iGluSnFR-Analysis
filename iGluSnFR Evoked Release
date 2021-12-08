@@ -1,0 +1,194 @@
+% ---------------------------------------------------------------------------------------------- %
+% Fluorescence analysis: single-vesicle quantal release of excitatory EVOKED neurotransmission   %
+% Each matlab file outputted corresponds to each sheet within an Excel file % 
+% ------------------------------------------------------------------------- %
+
+% --> For this script to work, you need to save the data properly organized in an Excel file. Please see Instructions
+
+%% Select file and sheet 
+for nfile=1
+    if nfile==1
+        filename='2020-8-27 spon bleach 2mMCa 2min.xlsx';
+        outfile = '2020-8-27 spon bleach 2mMCa 2min EVOKED 00'; 
+    % elseif nfile==2
+    %    filename='next file.xlsx';
+    %    outfile = 'next file ADPT std3 00';
+    end
+
+[status,sheets]=xlsfinfo(filename);
+NSheets=numel(sheets);
+
+Amp_syn_bef_comp=[];Amp_syn_aft_comp=[]; 
+Pr_bef_comp=[];Pr_aft_comp=[];
+Amp_F0_bef_comp=[];Amp_F0_aft_comp=[];
+
+% To analyze sheet by sheet
+for sheet = 1:NSheets
+    Data=xlsread(filename,sheet);
+    %column time
+    t=Data(:,3);
+    %matrix ROI
+    ROI=Data(:,5:end);
+    ogROI=Data(:,5:end);
+
+    %%Define variables
+    t_AP1=Data(1,1); %time of stimulation starting (0.2Hz 40APs)
+    i_AP1=find(t>t_AP1,1);
+    t_Tx=Data(2,1); %time of photobleaching
+    i_Tx=find(t>t_Tx,1);
+    t_Tx_end=Data(3,1); %time of spontaneous measurement starting
+    i_Tx_end=find(t>t_Tx_end,1);
+    t_AP2=Data(4,1); %time of spontaneous measurement ending and
+                     %time of stimulation starting (0.2Hz 40APs)
+    i_AP2=find(t>t_AP2,1);
+    t_K=Data(5,1);  %time of AP delivery ending
+    i_K=find(t>t_K,1);
+
+    interval=5; %interval between AP delivery in seconds
+
+    %% create NaNs
+    N_syn_bef=NaN(size(ROI,2),1);N_syn_aft=NaN(size(ROI,2),1);
+    Amp_syn_bef=NaN(100,size(ROI,2));Amp_syn_aft=NaN(100,size(ROI,2));
+
+    sROI=NaN(size(ROI));
+    control_syn_bef=zeros(size(ROI));control_syn_aft=zeros(size(ROI));
+    peak_pos_syn_bef=NaN(1000,size(control_syn_bef,2));peak_pos_syn_aft=NaN(1000,size(control_syn_bef,2));
+    baseline=NaN(size(ROI)); % to set baseline that will eventually be smoothed
+    Pr_bef=zeros(size(ROI,2),1);Pr_aft=zeros(size(ROI,2),1);
+    dF_before=NaN(120,1); dF_after=NaN(120,1); 
+    F0=NaN(size(ROI,2),1);
+    Amp_F0_bef=NaN(100,size(ROI,2));Amp_F0_aft=NaN(100,size(ROI,2));
+
+
+%% Define, characterize, and count synchronous peaks 
+for w=1:size(ROI,2)
+
+    baseline(:,w)=smooth(ROI(:,w),250); %create baseline by averaging a lot of pts
+    ROI(:,w)=ROI(:,w)-baseline(:,w); %subtract baseline from trace w peaks
+    sROI(:,w)=smooth(ROI(:,w),5); %smooth subtracted trace
+    % calculation of signal-to-noise ratio as mean divided by standard deviation:
+    
+end 
+%% Define and characterize Synchronous peaks
+
+    %define synchronous peaks as within 300msec
+    for Stim_Num = 1:40 %  # of stim times
+        Stim_time_bef(Stim_Num)=(t_AP1+interval*(Stim_Num-1)); % time points at stim q5sec
+        Stim_time_aft(Stim_Num)=(t_AP2+interval*(Stim_Num-1)); % time points at stim q5sec
+    end 
+    
+    c=1; d=1;
+    
+    
+    for column_ROI = 1:size(sROI,2) %column by column = # of ROIs, previously j
+        num_peaks_syn_bef=0; %previously a 
+        num_peaks_syn_aft=0;
+        
+        %amplitude of potassium response
+        K_size(column_ROI) = max(sROI(i_K:end,column_ROI))-mean(sROI(i_K-100:i_K-1,column_ROI));
+        
+%%--------------To detect evoked peaks before photobleaching------------%%
+        
+        for row_time = i_AP1-50:i_Tx %row by row = time, previously k
+            noise = std(sROI(row_time-100:row_time,column_ROI));
+            baseline_second = (mean(sROI(row_time-100:row_time,column_ROI))); %baseline for peak detection
+            F0 = mean(ogROI(1:250,column_ROI)); %average of first five seconds = F0
+            
+            %condition 1: peak detection at 3 SDs above the baseline_second
+            %condition 2: time proximity to stimulation should be within 0.3 seconds 
+            %condition 3: so it doesn't double count the same peak that lasts longer than one time point
+            if ((mean(sROI(row_time:row_time+3,column_ROI)))> (3*noise+baseline_second)...
+                    && (any(abs(Stim_time_bef - t(row_time))<0.3)==1) ...
+                    && (mean(control_syn_bef(row_time-30:row_time+2,column_ROI))==0))
+                 num_peaks_syn_bef=num_peaks_syn_bef+1; % counting the number of peaks
+                 [M,I]=max(sROI(row_time:row_time+50,column_ROI));
+                 
+                 Amp_syn_bef(num_peaks_syn_bef,column_ROI)=max(sROI(row_time:row_time+5,column_ROI))...
+                     - mean(sROI(row_time-8:row_time-1,column_ROI)); %max within .16 sec (peaks average 3-5 pts long)
+                 control_syn_bef(row_time,column_ROI)=1; 
+                 
+                 Amp_F0_bef(num_peaks_syn_bef,column_ROI)=Amp_syn_bef(num_peaks_syn_bef,column_ROI)/F0;
+                 
+                 %save individually detected peaks
+                 dF_before(:,c)=sROI(row_time-30:row_time+89,column_ROI);
+                 c=c+1;
+                          
+            end
+            
+        end
+        %make this part of the column for loop so it runs a bit faster
+        N_syn_bef(column_ROI)=num_peaks_syn_bef;
+        Pr_bef(column_ROI)=num_peaks_syn_bef/30;
+        
+        % time relationship to peaks found in matrix
+        temporary=find(control_syn_bef(:,column_ROI)==1);
+        peak_pos_syn_bef(1:size(temporary,1),column_ROI)=t(temporary);
+
+        mean_dF_bef=mean(dF_before,2);
+        
+%%--------------To detect evoked peaks after photobleaching------------%%
+
+        for row_time = i_AP2-50:i_K 
+            noise = std(sROI(row_time-100:row_time,column_ROI));
+            baseline_second = (mean(sROI(row_time-100:row_time,column_ROI)));
+            F0 = mean(ogROI(1:250,column_ROI));
+            %condition 1: peak detection occurs 3 SDs above baseline
+            %condition 2: time proximity to evoked stim
+            %condition 3: so it doesn't double count the same peak that lasts longer than one time point
+            if ((mean(sROI(row_time:row_time+3,column_ROI)))> (3*noise+baseline_second)...
+                    && (any(abs(Stim_time_aft - t(row_time))<0.3)==1) ...
+                    && (mean(control_syn_aft(row_time-30:row_time+2,column_ROI))==0))
+                num_peaks_syn_aft=num_peaks_syn_aft+1; % counting the number of peaks
+                [M,I]=max(sROI(row_time:row_time+50,column_ROI));
+                
+                Amp_syn_aft(num_peaks_syn_aft,column_ROI)=max(sROI(row_time:row_time+5,column_ROI))...
+                    - mean(sROI(row_time-8:row_time-1,column_ROI)); %max within .16 sec (peaks average 3-5 pts long)
+                control_syn_aft(row_time,column_ROI)=1;
+                
+                Amp_F0_aft(num_peaks_syn_aft,column_ROI)=Amp_syn_aft(num_peaks_syn_aft,column_ROI)/F0;
+                
+                %save peaks
+                dF_after(:,d)=sROI(row_time-30:row_time+89,column_ROI);
+                d=d+1;
+  
+            end
+            
+        end
+        %make this part of the column for loop so it runs a bit faster
+        N_syn_aft(column_ROI)=num_peaks_syn_aft;
+        Pr_aft(column_ROI)=num_peaks_syn_aft/30;
+        % time relationship to peaks found in matrix
+        temporary=find(control_syn_aft(:,column_ROI)==1);
+        peak_pos_syn_aft(1:size(temporary,1),column_ROI)=t(temporary);
+
+        mean_dF_aft=mean(dF_after,2);
+        
+    end
+    
+    % this IF is to only concateante if the script found peaks:
+    if isempty(peak_pos_syn_bef)==0
+        Amp_syn_clean_bef=Amp_syn_bef(~isnan(Amp_syn_bef));
+        Amp_syn_bef_comp=vertcat(Amp_syn_bef_comp, Amp_syn_clean_bef);
+        Pr_bef_comp=vertcat(Pr_bef_comp,Pr_bef);
+        Amp_F0_bef_clean=Amp_F0_bef(~isnan(Amp_F0_bef));
+        Amp_F0_bef_comp=vertcat(Amp_F0_bef_comp, Amp_F0_bef_clean);
+    end
+    
+    if isempty(peak_pos_syn_aft)==0
+        % numbers as it goes through sheets
+        % purple are all the sheets you want to save
+        Amp_syn_clean_aft=Amp_syn_aft(~isnan(Amp_syn_aft));
+        Amp_syn_aft_comp=vertcat(Amp_syn_aft_comp, Amp_syn_clean_aft);
+        Pr_aft_comp=vertcat(Pr_aft_comp,Pr_aft);
+        Amp_F0_aft_clean=Amp_F0_aft(~isnan(Amp_F0_aft));
+        Amp_F0_aft_comp=vertcat(Amp_F0_aft_comp, Amp_F0_aft_clean);
+    end
+    
+save([outfile,num2str(sheet)]);
+
+ 
+end 
+%plot(t,sROI(:,1))
+clearvars -except nfile filename outfile sheet NSheets status sheets
+
+end 
