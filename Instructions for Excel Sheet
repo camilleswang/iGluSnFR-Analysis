@@ -1,0 +1,16 @@
+Instructions to fill the Excel template:
+
+First Stimulation		time of first stimulation (0.2Hz)
+Experiment Paused   time of photobleaching and end of stimulation	
+Experiment Resumed  end of photobleaching and start of second spontaneous measurement
+Second Stimuation   end of spontaneous measurement and start of second stimulation (0.2Hz)
+End of Experiment   end of experiment
+
+Time (s)	          time column.
+Index             	frame number (goes down by integer i.e. 1,2,3,4,5...)
+Roi1,ROI2...	      fluorescence traces for each ROI.
+
+
+
+
+You can copy all this information from the metadata of your imaging experiment. 
