@@ -8,8 +8,8 @@
 %% Select file and sheet 
 for nfile=1
     if nfile==1
-        filename='2020-8-27 spon bleach 2mMCa 2min.xlsx';
-        outfile = '2020-8-27 spon bleach 2mMCa 2min EVOKED 00'; 
+        filename='sample excel file.xlsx';
+        outfile = 'sample excel file 2min EVOKED 00'; 
     % elseif nfile==2
     %    filename='next file.xlsx';
     %    outfile = 'next file ADPT std3 00';
