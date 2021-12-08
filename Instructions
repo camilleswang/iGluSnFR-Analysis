@@ -1,19 +1,14 @@
 Instructions to fill the Excel template:
 
-tini		time of first stimulation (AP) for low freq. stimulation (for single vesicle analysis)
-Nstim		number of AP.
-tinterval	interval, in seconds, between AP.
-tpeak1		high frequency stimulation (for fitting of "big peaks" in Matlab script).
-tpeak2,3...	use these if you did multiple high frequency stimualtion or high potassium, always write the end time of a peak (e.g. tpeak2) by filling the next peak time (e.g. tpeak3 will be the end time for tpeak2, if you don't write a value for tpeak3 the script will not analyze tpeak2).
-Total_points	number of values to save all the single vesicle fusion events found in a separate matrix -dF- (i.e. the number of points after the peak that you want to save in order to plot it later or do whatever you want).
-Amplitude_limit	here write the limit in amplitude to discard multivesicular fusion events.
-increment	here write the interval between on frama and the next in seconds (i.e. the inverse of you imaging speed).
-min_fit_points	the minimum number or values required to fit the decay of the single vesicle fusion events.
+First Stimulation		time of first stimulation (0.2Hz)
+Experiment Paused   time of photobleaching and end of stimulation	
+Experiment Resumed  end of photobleaching and start of second spontaneous measurement
+Second Stimuation   end of spontaneous measurement and start of second stimulation (0.2Hz)
+End of Experiment   end of experiment
 
-Time (s)	time column.
-Whole picture	the fluorescence of the whole field of view, you can leave it blank if you want.
-Frame number	frame number, you can leave it blank if you want.
-Roi1,ROI2...	fluorescence traces for each ROI.
+Time (s)	          time column.
+Index             	frame number (goes down by integer i.e. 1,2,3,4,5...)
+Roi1,ROI2...	      fluorescence traces for each ROI.
 
 You can copy all this information from the metadata of your imaging experiment. 
 
